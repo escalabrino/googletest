@@ -39,7 +39,7 @@
 #include <time.h>
 #include <wchar.h>
 #include <wctype.h>
-
+#include <fstream>
 #include <algorithm>
 #include <chrono>  // NOLINT
 #include <cmath>
@@ -1635,13 +1635,82 @@ std::string GetBoolAssertionFailureMessage(
   return msg.GetString();
 }
 
+void removeLastTestsuitesTag(const std::string& filePath) {
+    // Leggi il contenuto del file
+    std::ifstream inputFile(filePath);
+    std::string fileContents((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+
+    // Trova l'ultima occorrenza di </testsuites>
+    size_t pos = fileContents.rfind("</testsuites>");
+    if (pos != std::string::npos) {
+        // Tronca il file prima dell'ultima occorrenza di </testsuites>
+        fileContents.erase(pos);
+
+        // Scrivi il nuovo contenuto nel file sovrascrivendo il vecchio
+        std::ofstream outputFile(filePath);
+        outputFile << fileContents;
+    }
+
+    // Chiudi il file di input
+    inputFile.close();
+}
+
+std::ofstream storeSuccessAssertions()
+{
+    // Ottieni il percorso del file base senza estensione
+    std::string basePath = UnitTestOptions::GetAbsolutePathToOutputFile();
+    std::string source_name = GetCurrentExecutableName().string();
+    size_t lastDotPos = basePath.find_last_of('.');
+    if (lastDotPos != std::string::npos) {
+        basePath = basePath.substr(0, lastDotPos);
+    }
+
+    // Aggiungi il suffisso "_success.xml"
+    std::string successPath = basePath + "_success.xml";
+
+    // Verifica se il file esiste già
+    if (access(successPath.c_str(), F_OK) == -1) {
+        // Se il file non esiste, crea un nuovo file XML con l'intestazione
+        std::ofstream newFile(successPath);
+        newFile << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        newFile << "<testsuites>\n";
+        newFile.close();
+    }
+    // Apri il file XML in modalità append
+    std::ofstream xmlStream(successPath, std::ios_base::app);
+
+    // Verifica se l'apertura del file ha avuto successo prima di scrivere
+    if (xmlStream.is_open()) {
+
+        removeLastTestsuitesTag(successPath);
+
+        // Ottieni il nome del test corrente
+        const char* currentTestName = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        // Scrivi nel file XML
+        xmlStream << "  <source>" << source_name << "</source>\n";
+        xmlStream << "    <testname>" << currentTestName << "</testname>\n";
+    } else {
+        // Gestione dell'errore nell'apertura del file
+        std::cerr << "Errore nell'apertura del file XML per la scrittura." << std::endl;
+    }
+
+    return xmlStream;
+}
+
 // Helper function for implementing ASSERT_NEAR.
 AssertionResult DoubleNearPredFormat(const char* expr1, const char* expr2,
                                      const char* abs_error_expr, double val1,
                                      double val2, double abs_error) {
   const double diff = fabs(val1 - val2);
-  if (diff <= abs_error) return AssertionSuccess();
-
+   if (diff <= abs_error) {
+    // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << expr1 << "\" value1=\"" << val1
+              << "\" value2=\"" << val2 << "\" abs_error=\"" << abs_error << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
+    return AssertionSuccess();
+   }
   // Find the value which is closest to zero.
   const double min_abs = std::min(fabs(val1), fabs(val2));
   // Find the distance to the next double from that value.
