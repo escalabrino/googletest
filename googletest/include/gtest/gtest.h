@@ -1454,8 +1454,8 @@ AssertionResult CmpHelperOpFailure(const char* expr1, const char* expr2,
       std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions(); \
       xmlStream << "       <success_expect expr=\"" << expr1 << "\" expr2=\"" << expr2 \
                 << "\" value1=\"" << val1                                      \
-                << "\" value2=\"" << val2 << "\" />\n";                        \
-      xmlStream << "</testsuites>\n";                                          \
+                << "\" value2=\"" << val2 << "\" op=\"" << #op_name << "\" />\n";  \
+        xmlStream << "</testsuites>\n";                                          \
       xmlStream.close();                                                       \
       return AssertionSuccess();                                               \
     } else {                                                                   \
