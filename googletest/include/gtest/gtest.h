@@ -1379,8 +1379,8 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
   if (lhs == rhs) {
       std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions();
       xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-                << "\" value1=\"" << lhs
-                << "\" value2=\"" << rhs << "\" />\n";
+                << "\" value1=\"" << static_cast<uint32_t>(lhs)
+                << "\" value2=\"" << static_cast<uint32_t>(rhs) << "\" />\n";
       xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
       xmlStream.close();
     return AssertionSuccess();
