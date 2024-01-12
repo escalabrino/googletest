@@ -1930,14 +1930,8 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
     }                                                                       \
   } while (0)
 
-#define EXPECT_GT(val1, val2)                                              \
-  do {                                                                      \
-    const auto& gtest_retval = ::testing::internal::CmpHelperGT(            \
-        #val1, #val2, static_cast<decltype(val1)>(val1),                     \
-        static_cast<decltype(val2)>(val2));                                \
-    if (gtest_retval == ::testing::AssertionSuccess()) {                   \
-      std::cout << "Success: Test Name: " << ::testing::UnitTest::GetInstance()->current_test_info()->name() << ", " \
-                << #val1 << ": " << val1 << ", "
+#define EXPECT_GT(val1, val2) \
+  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGT, val1, val2)
 
 
 #define GTEST_ASSERT_EQ(val1, val2) \

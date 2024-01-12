@@ -1705,7 +1705,8 @@ AssertionResult DoubleNearPredFormat(const char* expr1, const char* expr2,
    if (diff <= abs_error) {
     // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
     std::ofstream xmlStream = storeSuccessAssertions();
-    xmlStream << "       <success_expect expr=\"" << expr1 << "\" value1=\"" << val1
+    xmlStream << "       <success_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+              << "\" value1=\"" << val1
               << "\" value2=\"" << val2 << "\" abs_error=\"" << abs_error << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
     xmlStream.close();
@@ -1750,12 +1751,25 @@ AssertionResult FloatingPointLE(const char* expr1, const char* expr2,
                                 RawType val1, RawType val2) {
   // Returns success if val1 is less than val2,
   if (val1 < val2) {
+     // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+              << "\" value1=\"" << val1
+              << "\" value2=\"" << val2 << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   }
 
   // or if val1 is almost equal to val2.
   const FloatingPoint<RawType> lhs(val1), rhs(val2);
   if (lhs.AlmostEquals(rhs)) {
+      // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect value1=\"" << val1
+              << "\" value2=\"" << val2 << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   }
 
@@ -1800,6 +1814,13 @@ AssertionResult CmpHelperSTREQ(const char* lhs_expression,
                                const char* rhs_expression, const char* lhs,
                                const char* rhs) {
   if (String::CStringEquals(lhs, rhs)) {
+      // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+              << "\" value1=\"" << lhs
+              << "\" value2=\"" << rhs << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   }
 
@@ -1812,6 +1833,13 @@ AssertionResult CmpHelperSTRCASEEQ(const char* lhs_expression,
                                    const char* rhs_expression, const char* lhs,
                                    const char* rhs) {
   if (String::CaseInsensitiveCStringEquals(lhs, rhs)) {
+      // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+              << "\" value1=\"" << lhs
+              << "\" value2=\"" << rhs << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   }
 
@@ -1824,6 +1852,13 @@ AssertionResult CmpHelperSTRNE(const char* s1_expression,
                                const char* s2_expression, const char* s1,
                                const char* s2) {
   if (!String::CStringEquals(s1, s2)) {
+      // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << s1_expression << "\" expr2=\"" << s2_expression
+              << "\" value1=\"" << s1
+              << "\" value2=\"" << s2 << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   } else {
     return AssertionFailure()
@@ -1837,6 +1872,12 @@ AssertionResult CmpHelperSTRCASENE(const char* s1_expression,
                                    const char* s2_expression, const char* s1,
                                    const char* s2) {
   if (!String::CaseInsensitiveCStringEquals(s1, s2)) {
+     std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << s1_expression << "\" expr2=\"" << s2_expression
+              << "\" value1=\"" << s1
+              << "\" value2=\"" << s2 << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   } else {
     return AssertionFailure()
@@ -2172,6 +2213,12 @@ AssertionResult CmpHelperSTREQ(const char* lhs_expression,
                                const char* rhs_expression, const wchar_t* lhs,
                                const wchar_t* rhs) {
   if (String::WideCStringEquals(lhs, rhs)) {
+    std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+              << "\" value1=\"" << lhs
+              << "\" value2=\"" << rhs << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   }
 
@@ -2184,6 +2231,12 @@ AssertionResult CmpHelperSTRNE(const char* s1_expression,
                                const char* s2_expression, const wchar_t* s1,
                                const wchar_t* s2) {
   if (!String::WideCStringEquals(s1, s2)) {
+     std::ofstream xmlStream = storeSuccessAssertions();
+    xmlStream << "       <success_expect expr=\"" << s1_expression << "\" expr2=\"" << s2_expression
+              << "\" value1=\"" << s1
+              << "\" value2=\"" << s2 << "\" />\n";
+    xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+    xmlStream.close();
     return AssertionSuccess();
   }
 
