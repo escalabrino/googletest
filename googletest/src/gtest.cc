@@ -39,7 +39,7 @@
 #include <time.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <fstream>
+
 #include <algorithm>
 #include <chrono>  // NOLINT
 #include <cmath>
