@@ -5770,6 +5770,21 @@ void UnitTestImpl::ConfigureXmlOutput() {
 #endif  // GTEST_HAS_FILE_SYSTEM
 }
 
+void UnitTestImpl::ClearTestSuccessFile(){
+    std::string basePath = UnitTestOptions::GetAbsolutePathToOutputFile();
+    size_t lastDotPos = basePath.find_last_of('.');
+    if (lastDotPos != std::string::npos) {
+        basePath = basePath.substr(0, lastDotPos);
+    }
+    std::string successPath = basePath + "_success.xml";
+
+    if (std::remove(successPath.c_str()) == 0) {
+        std::cout << "File with positive assertions removed.\n";
+    } else {
+        std::cerr << "Impossible to remove the file or it is not present.\n";
+    }
+}
+
 #if GTEST_CAN_STREAM_RESULTS_
 // Initializes event listeners for streaming test results in string form.
 // Must not be called before InitGoogleTest.
@@ -5816,6 +5831,7 @@ void UnitTestImpl::PostFlagParsingInit() {
     // Configures listeners for XML output. This makes it possible for users
     // to shut down the default XML output before invoking RUN_ALL_TESTS.
     ConfigureXmlOutput();
+    ClearTestSuccessFile();
 
     if (GTEST_FLAG_GET(brief)) {
       listeners()->SetDefaultResultPrinter(new BriefUnitTestResultPrinter);

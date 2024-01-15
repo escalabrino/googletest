@@ -803,7 +803,7 @@ class GTEST_API_ UnitTestImpl {
   // Initializes the event listener performing XML output as specified by
   // UnitTestOptions. Must not be called before InitGoogleTest.
   void ConfigureXmlOutput();
-
+  static void ClearTestSuccessFile();
 #if GTEST_CAN_STREAM_RESULTS_
   // Initializes the event listener for streaming test results to a socket.
   // Must not be called before InitGoogleTest.
