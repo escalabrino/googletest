@@ -1913,7 +1913,6 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
 #define EXPECT_GT(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGT, val1, val2)
 
-
 #define GTEST_ASSERT_EQ(val1, val2) \
   ASSERT_PRED_FORMAT2(::testing::internal::EqHelper::Compare, val1, val2)
 #define GTEST_ASSERT_NE(val1, val2) \
@@ -2018,19 +2017,9 @@ class TestWithParam : public Test, public WithParamInterface<T> {};
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<double>, \
                       val1, val2)
 
-#define EXPECT_NEAR(val1, val2, abs_error)                                \
-  do {                                                                    \
-    const auto& gtest_retval = ::testing::internal::DoubleNearPredFormat( \
-        #val1, #val2, #abs_error, static_cast<double>(val1),              \
-        static_cast<double>(val2), static_cast<double>(abs_error));      \
-    if (gtest_retval == ::testing::AssertionSuccess()) {                 \
-      std::cout << "Success: Test Name: " << ::testing::UnitTest::GetInstance()->current_test_info()->name() << ", " \
-                << #val1 << ": " << val1 << ", " << #val2 << ": " << val2 \
-                << ", abs_error: " << abs_error << std::endl;            \
-    } else {                                                              \
-      EXPECT_PRED_FORMAT3(::testing::internal::DoubleNearPredFormat, val1, val2, abs_error); \
-    }                                                                     \
-  } while (0)
+#define EXPECT_NEAR(val1, val2, abs_error)                                   \
+  EXPECT_PRED_FORMAT3(::testing::internal::DoubleNearPredFormat, val1, val2, \
+                      abs_error)
 
 #define ASSERT_NEAR(val1, val2, abs_error)                                   \
   ASSERT_PRED_FORMAT3(::testing::internal::DoubleNearPredFormat, val1, val2, \
