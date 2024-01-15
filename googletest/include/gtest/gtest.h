@@ -1372,21 +1372,35 @@ inline bool operator==(faketype, faketype) { return true; }
 inline bool operator!=(faketype, faketype) { return false; }
 std::ofstream storeSuccessAssertions();
 // The helper function for {ASSERT|EXPECT}_EQ.
+// Funzione template per ottenere la rappresentazione del tipo
+template <typename T>
+std::string getValueAsString(const T& value) {
+    if constexpr (std::is_enum<T>::value) {
+        // Implementa la tua logica specifica per le enum
+        return std::to_string(static_cast<std::underlying_type_t<T>>(value));
+    } else {
+        // Implementa la tua logica generica per gli altri tipi
+        return std::to_string(value);
+    }
+}
+
+// Funzione template per ASSERT_EQ con SFINAE
 template <typename T1, typename T2>
 AssertionResult CmpHelperEQ(const char* lhs_expression,
                             const char* rhs_expression, const T1& lhs,
                             const T2& rhs) {
-  if (lhs == rhs) {
-      std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions();
-      xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-                << "\" value1=\"" << static_cast<uint32_t>(lhs)
-                << "\" value2=\"" << static_cast<uint32_t>(rhs) << "\" />\n";
-      xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
-      xmlStream.close();
-    return AssertionSuccess();
-  }
+    if (lhs == rhs) {
+        std::ofstream xmlStream = storeSuccessAssertions();
 
-  return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
+        xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+                  << "\" value1=\"" << getValueAsString(lhs)
+                  << "\" value2=\"" << getValueAsString(rhs) << "\" />\n";
+        xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+        xmlStream.close();
+        return AssertionSuccess();
+    }
+
+    return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
 }
 
 class EqHelper {
@@ -1453,8 +1467,8 @@ AssertionResult CmpHelperOpFailure(const char* expr1, const char* expr2,
     if (val1 op val2) {                                                        \
       std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions(); \
       xmlStream << "       <success_expect expr=\"" << expr1 << "\" expr2=\"" << expr2 \
-                << "\" value1=\"" << val1                                      \
-                << "\" value2=\"" << val2 << "\" op=\"" << #op_name << "\" />\n";  \
+                << "\" value1=\"" << getValueAsString(val1)                                      \
+                << "\" value2=\"" << getValueAsString(val2) << "\" op=\"" << #op_name << "\" />\n";  \
         xmlStream << "</testsuites>\n";                                          \
       xmlStream.close();                                                       \
       return AssertionSuccess();                                               \
