@@ -1394,7 +1394,7 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
 
         xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
                   << "\" value1=\"" << getValueAsString(lhs)
-                  << "\" value2=\"" << getValueAsString(rhs) << "\" />\n";
+                  << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
         xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
         xmlStream.close();
         return AssertionSuccess();
@@ -1601,7 +1601,7 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
       std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions();
       xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
                 << "\" value1=\"" << lhs_value
-                << "\" value2=\"" << rhs_value << "\" />\n";
+                << "\" value2=\"" << rhs_value << "\" op=\"" << "EQ" << "\" />\n";
       xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
       xmlStream.close();
     return AssertionSuccess();
