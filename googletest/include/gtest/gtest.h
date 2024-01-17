@@ -1391,7 +1391,6 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
                             const T2& rhs) {
     if (lhs == rhs) {
         std::ofstream xmlStream = storeSuccessAssertions();
-
         xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
                   << "\" value1=\"" << getValueAsString(lhs)
                   << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
@@ -1399,7 +1398,12 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
         xmlStream.close();
         return AssertionSuccess();
     }
-
+    std::ofstream xmlStream = storeSuccessAssertions();
+        xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+                  << "\" value1=\"" << getValueAsString(lhs)
+                  << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
+        xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+        xmlStream.close();
     return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
 }
 
@@ -1473,6 +1477,12 @@ AssertionResult CmpHelperOpFailure(const char* expr1, const char* expr2,
       xmlStream.close();                                                       \
       return AssertionSuccess();                                               \
     } else {                                                                   \
+     std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions(); \
+      xmlStream << "       <failure_expect expr=\"" << expr1 << "\" expr2=\"" << expr2 \
+                << "\" value1=\"" << getValueAsString(val1)                                      \
+                << "\" value2=\"" << getValueAsString(val2) << "\" op=\"" << #op_name << "\" />\n";  \
+        xmlStream << "</testsuites>\n";                                          \
+      xmlStream.close();                                                       \
       return CmpHelperOpFailure(expr1, expr2, val1, val2, #op);                \
     }                                                                          \
   }
@@ -1614,7 +1624,12 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   ::std::stringstream rhs_ss;
   rhs_ss.precision(std::numeric_limits<RawType>::digits10 + 2);
   rhs_ss << rhs_value;
-
+   std::ofstream xmlStream = ::testing::internal::storeSuccessAssertions();
+      xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+                << "\" value1=\"" << lhs_value
+                << "\" value2=\"" << rhs_value << "\" op=\"" << "EQ" << "\" />\n";
+      xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+      xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression,
                    StringStreamToString(&lhs_ss), StringStreamToString(&rhs_ss),
                    false);
