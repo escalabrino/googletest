@@ -1392,6 +1392,26 @@ std::string getValueAsString(const std::bitset<N>& value) {
     return value.to_string();
 }
 
+
+std::string escapeXmlString(const std::string& input) {
+    std::ostringstream escaped;
+    for (char c : input) {
+        switch (c) {
+            case '&':  escaped << "&amp;";       break;
+            case '\"': escaped << "&quot;";      break;
+            case '\'': escaped << "&apos;";      break;
+            case '<':  escaped << "&lt;";        break;
+            case '>':  escaped << "&gt;";        break;
+            default:   escaped << c;             break;
+        }
+    }
+    return escaped.str();
+}
+
+std::string escapeXmlString(const char* input) {
+    return escapeXmlString(std::string(input));
+}
+
 // Funzione template per ASSERT_EQ con SFINAE
 template <typename T1, typename T2>
 AssertionResult CmpHelperEQ(const char* lhs_expression,
@@ -1399,7 +1419,7 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
                             const T2& rhs) {
     if (lhs == rhs) {
         std::ofstream xmlStream = storeAssertions();
-        xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+        xmlStream << "       <success_expect expr=\"" <<  escapeXmlString(lhs_expression) << "\" expr2=\"" <<  escapeXmlString(rhs_expression)
                   << "\" value1=\"" << getValueAsString(lhs)
                   << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
         xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1407,7 +1427,7 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
         return AssertionSuccess();
     }
     std::ofstream xmlStream = storeAssertions();
-        xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
+        xmlStream << "       <failure_expect expr=\"" <<  escapeXmlString(lhs_expression) << "\" expr2=\"" <<  escapeXmlString(rhs_expression)
                   << "\" value1=\"" << getValueAsString(lhs)
                   << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
         xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1617,9 +1637,9 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
 
   if (lhs.AlmostEquals(rhs)) {
       std::ofstream xmlStream = ::testing::internal::storeAssertions();
-      xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-                << "\" value1=\"" << lhs_value
-                << "\" value2=\"" << rhs_value << "\" op=\"" << "EQ" << "\" />\n";
+      xmlStream << "       <success_expect expr=\"" <<  escapeXmlString(lhs_expression) << "\" expr2=\"" <<  escapeXmlString(rhs_expression)
+                << "\" value1=\"" <<  escapeXmlString(lhs_value)
+                << "\" value2=\"" <<  escapeXmlString(rhs_value) << "\" op=\"" << "EQ" << "\" />\n";
       xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
       xmlStream.close();
     return AssertionSuccess();
@@ -1633,9 +1653,9 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   rhs_ss.precision(std::numeric_limits<RawType>::digits10 + 2);
   rhs_ss << rhs_value;
    std::ofstream xmlStream = ::testing::internal::storeAssertions();
-      xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-                << "\" value1=\"" << lhs_value
-                << "\" value2=\"" << rhs_value << "\" op=\"" << "EQ" << "\" />\n";
+      xmlStream << "       <failure_expect expr=\"" <<  escapeXmlString(lhs_expression) << "\" expr2=\"" <<  escapeXmlString(rhs_expression)
+                << "\" value1=\"" <<  escapeXmlString(lhs_value)
+                << "\" value2=\"" <<  escapeXmlString(rhs_value) << "\" op=\"" << "EQ" << "\" />\n";
       xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
       xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression,
