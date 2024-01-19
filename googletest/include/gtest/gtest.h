@@ -52,6 +52,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <bitset>
+#include <type_traits>
+#include <fstream>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -59,7 +62,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-#include <fstream>
+
 
 #include "gtest/gtest-assertion-result.h"
 #include "gtest/gtest-death-test.h"
@@ -1382,6 +1385,11 @@ std::string getValueAsString(const T& value) {
         // Implementa la tua logica generica per gli altri tipi
         return std::to_string(value);
     }
+}
+// Specialization for std::bitset
+template <std::size_t N>
+std::string getValueAsString(const std::bitset<N>& value) {
+    return value.to_string();
 }
 
 // Funzione template per ASSERT_EQ con SFINAE
