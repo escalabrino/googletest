@@ -1392,6 +1392,9 @@ std::string getValueAsString(const T& value) {
     } else if constexpr (std::is_same<T, const wchar_t*>::value) {
         // Se T è const wchar_t*, effettua l'escape della stringa XML
         return escapeXmlString(value);
+    } else if constexpr (std::is_arithmetic<T>::value) {
+        // Se T è un tipo numerico, utilizza std::to_string direttamente
+        return std::to_string(value);
     } else {
         // Implementa la tua logica generica per gli altri tipi
         return escapeXmlString(std::to_string(value));
@@ -1629,8 +1632,8 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   if (lhs.AlmostEquals(rhs)) {
       std::ofstream xmlStream = ::testing::internal::storeAssertions();
       xmlStream << "       <success_expect expr=\"" <<  getValueAsString(lhs_expression) << "\" expr2=\"" <<  getValueAsString(rhs_expression)
-                << "\" value1=\"" <<  getValueAsString(lhs_value)
-                << "\" value2=\"" <<  getValueAsString(rhs_value) << "\" op=\"" << "EQ" << "\" />\n";
+                << "\" value1=\"" <<  lhs_value
+                << "\" value2=\"" <<  rhs_value << "\" op=\"" << "EQ" << "\" />\n";
       xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
       xmlStream.close();
     return AssertionSuccess();
@@ -1645,8 +1648,8 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   rhs_ss << rhs_value;
    std::ofstream xmlStream = ::testing::internal::storeAssertions();
       xmlStream << "       <failure_expect expr=\"" <<  getValueAsString(lhs_expression) << "\" expr2=\"" <<  getValueAsString(rhs_expression)
-                << "\" value1=\"" <<  getValueAsString(lhs_value)
-                << "\" value2=\"" <<  getValueAsString(rhs_value) << "\" op=\"" << "EQ" << "\" />\n";
+                << "\" value1=\"" <<  lhs_value
+                << "\" value2=\"" <<  rhs_value << "\" op=\"" << "EQ" << "\" />\n";
       xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
       xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression,
