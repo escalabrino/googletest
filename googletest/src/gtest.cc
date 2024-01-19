@@ -1697,6 +1697,30 @@ std::ofstream storeAssertions()
     return xmlStream;
 }
 
+std::string escapeXmlString(const std::string& input) {
+    std::ostringstream escaped;
+    for (char c : input) {
+        switch (c) {
+            case '&':  escaped << "&amp;";       break;
+            case '\"': escaped << "&quot;";      break;
+            case '\'': escaped << "&apos;";      break;
+            case '<':  escaped << "&lt;";        break;
+            case '>':  escaped << "&gt;";        break;
+            default:   escaped << c;             break;
+        }
+    }
+    return escaped.str();
+}
+
+std::string escapeXmlString(const char* input) {
+    return escapeXmlString(std::string(input));
+}
+
+
+std::string escapeXmlString(const wchar_t* input) {
+    // Converte da wide a string
+    return escapeXmlString(std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(input));
+}
 // Helper function for implementing ASSERT_NEAR.
 AssertionResult DoubleNearPredFormat(const char* expr1, const char* expr2,
                                      const char* abs_error_expr, double val1,
@@ -1705,7 +1729,7 @@ AssertionResult DoubleNearPredFormat(const char* expr1, const char* expr2,
    if (diff <= abs_error) {
     // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <success_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+    xmlStream << "       <success_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2)
               << "\" value1=\"" << val1
               << "\" value2=\"" << val2 << "\" op=\"" << "NEAR" << "\" abs_error=\"" << abs_error << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1726,7 +1750,7 @@ AssertionResult DoubleNearPredFormat(const char* expr1, const char* expr2,
   if (!(std::isnan)(val1) && !(std::isnan)(val2) && abs_error > 0 &&
       abs_error < epsilon) {
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <failure_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+    xmlStream << "       <failure_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2)
               << "\" value1=\"" << val1
               << "\" value2=\"" << val2 << "\" op=\"" << "NEAR" << "\" abs_error=\"" << abs_error << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1744,7 +1768,7 @@ AssertionResult DoubleNearPredFormat(const char* expr1, const char* expr2,
               "EXPECT_EQUAL. Consider using EXPECT_DOUBLE_EQ instead.";
   }
   std::ofstream xmlStream = storeAssertions();
-  xmlStream << "       <failure_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+  xmlStream << "       <failure_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2)
               << "\" value1=\"" << val1
               << "\" value2=\"" << val2 << "\" op=\"" << "NEAR" << "\" abs_error=\"" << abs_error << "\" />\n";
   xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1765,7 +1789,7 @@ AssertionResult FloatingPointLE(const char* expr1, const char* expr2,
   if (val1 < val2) {
      // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <success_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+    xmlStream << "       <success_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2)
               << "\" value1=\"" << val1
               << "\" value2=\"" << val2 << "\" op=\"" << "LE" << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1797,7 +1821,7 @@ AssertionResult FloatingPointLE(const char* expr1, const char* expr2,
   val2_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
           << val2;
   std::ofstream xmlStream = storeAssertions();
-  xmlStream << "       <failure_expect expr=\"" << expr1 << "\" expr2=\"" << expr2
+  xmlStream << "       <failure_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2)
               << "\" value1=\"" << val1
               << "\" value2=\"" << val2 << "\" op=\"" << "LE" << "\" />\n";
   xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
@@ -1833,17 +1857,17 @@ AssertionResult CmpHelperSTREQ(const char* lhs_expression,
   if (String::CStringEquals(lhs, rhs)) {
       // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-              << "\" value1=\"" << lhs
-              << "\" value2=\"" << rhs << "\" op=\"" << "EQ" << "\" />\n";
+    xmlStream << "       <success_expect expr=\"" << getValueAsString(lhs_expression) << "\" expr2=\"" << getValueAsString(rhs_expression)
+              << "\" value1=\"" << getValueAsString(lhs)
+              << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
     xmlStream.close();
     return AssertionSuccess();
   }
   std::ofstream xmlStream = storeAssertions();
-  xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-              << "\" value1=\"" << lhs
-              << "\" value2=\"" << rhs << "\" op=\"" << "EQ" << "\" />\n";
+  xmlStream << "       <failure_expect expr=\"" << getValueAsString(lhs_expression) << "\" expr2=\"" << getValueAsString(rhs_expression)
+              << "\" value1=\"" << getValueAsString(lhs)
+              << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
   xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
   xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression, PrintToString(lhs),
@@ -1857,17 +1881,17 @@ AssertionResult CmpHelperSTRCASEEQ(const char* lhs_expression,
   if (String::CaseInsensitiveCStringEquals(lhs, rhs)) {
       // Success: scrivi nel file XML prima di ritornare l'AssertionSuccess.
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-              << "\" value1=\"" << lhs
-              << "\" value2=\"" << rhs << "\" op=\"" << "EQ" << "\" />\n";
+    xmlStream << "       <success_expect expr=\"" << getValueAsString(lhs_expression) << "\" expr2=\"" << getValueAsString(rhs_expression)
+              << "\" value1=\"" << getValueAsString(lhs)
+              << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
     xmlStream.close();
     return AssertionSuccess();
   }
   std::ofstream xmlStream = storeAssertions();
-  xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-              << "\" value1=\"" << lhs
-              << "\" value2=\"" << rhs << "\" op=\"" << "EQ" << "\" />\n";
+  xmlStream << "       <failure_expect expr=\"" << getValueAsString(lhs_expression) << "\" expr2=\"" << getValueAsString(rhs_expression)
+              << "\" value1=\"" << getValueAsString(lhs)
+              << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
   xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
   xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression, PrintToString(lhs),
@@ -2253,17 +2277,17 @@ AssertionResult CmpHelperSTREQ(const char* lhs_expression,
                                const wchar_t* rhs) {
   if (String::WideCStringEquals(lhs, rhs)) {
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <success_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-              << "\" value1=\"" << lhs
-              << "\" value2=\"" << rhs << "\" op=\"" << "EQ" << "\" />\n";
+    xmlStream << "       <success_expect expr=\"" << getValueAsString(lhs_expression) << "\" expr2=\"" << getValueAsString(rhs_expression)
+              << "\" value1=\"" << getValueAsString(lhs)
+              << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
     xmlStream.close();
     return AssertionSuccess();
   }
     std::ofstream xmlStream = storeAssertions();
-    xmlStream << "       <failure_expect expr=\"" << lhs_expression << "\" expr2=\"" << rhs_expression
-              << "\" value1=\"" << lhs
-              << "\" value2=\"" << rhs << "\" op=\"" << "EQ" << "\" />\n";
+    xmlStream << "       <failure_expect expr=\"" << getValueAsString(lhs_expression) << "\" expr2=\"" << getValueAsString(rhs_expression)
+              << "\" value1=\"" << getValueAsString(lhs)
+              << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
     xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
     xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression, PrintToString(lhs),
