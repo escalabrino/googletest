@@ -1632,6 +1632,10 @@ std::string GetBoolAssertionFailureMessage(
       << "\n  Actual: " << actual_predicate_value;
   if (actual_message[0] != '\0') msg << " (" << actual_message << ")";
   msg << "\nExpected: " << expected_predicate_value;
+  std::ofstream xmlStream = ::testing::internal::storeAssertions();
+  xmlStream << "       <failure_expect expr1=\"" << expression_text << "\" expr2=\"N/A\" value1=\"" \
+            << actual_predicate_value << "\" value2=\"" << expected_predicate_value << "\" op=\"" << "ASSERT" << "\" />\n";
+  xmlStream << "</testsuites>\n";
   return msg.GetString();
 }
 
