@@ -1492,7 +1492,7 @@ class NeverThrown {
           ::testing::AssertionResult(expression))                     \
     do {                                                              \
       std::ofstream xmlStream = ::testing::internal::storeAssertions(); \
-      xmlStream << "       <success_expect expr1=\"" << ::testing::internal::escapeXmlString(text) << "\" expr2=\"N/A\" value1=\"" \
+      xmlStream << "       <success_expect expr=\"" << ::testing::internal::escapeXmlString(text) << "\" expr2=\"N/A\" value1=\"" \
                 << #expected << "\" value2=\"" << #expected << "\" op=\"" << "ASSERT" << "\" />\n"; \
       xmlStream << "</testsuites>\n";                                      \
       xmlStream.close();                                               \
