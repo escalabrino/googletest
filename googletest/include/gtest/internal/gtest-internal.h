@@ -1490,11 +1490,17 @@ class NeverThrown {
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                       \
   if (const ::testing::AssertionResult gtest_ar_ =                    \
           ::testing::AssertionResult(expression))                     \
-    ;                                                                 \
-  else                                                                \
+    do {                                                              \
+      std::ofstream xmlStream = ::testing::internal::storeAssertions(); \
+      xmlStream << "       <success_expect expr=\"" << ::testing::internal::escapeXmlString(text) << "\" expr2=\"N/A\" value1=\"" \
+                << #expected << "\" value2=\"" << #expected << "\" op=\"" << "ASSERT" << "\" />\n"; \
+      xmlStream << "</testsuites>\n";                                      \
+      xmlStream.close();                                               \
+    } while (0); \
+  else \
     fail(::testing::internal::GetBoolAssertionFailureMessage(         \
-             gtest_ar_, text, #actual, #expected)                     \
-             .c_str())
+           gtest_ar_, text, #actual, #expected)                     \
+           .c_str())
 
 #define GTEST_TEST_NO_FATAL_FAILURE_(statement, fail)               \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_                                     \

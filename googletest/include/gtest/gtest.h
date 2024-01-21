@@ -52,6 +52,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <bitset>
+#include <type_traits>
+#include <fstream>
+#include <locale>
+#include <codecvt>
 #include <memory>
 #include <ostream>
 #include <set>
@@ -59,6 +64,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+
 
 #include "gtest/gtest-assertion-result.h"
 #include "gtest/gtest-death-test.h"
@@ -1369,17 +1375,58 @@ AssertionResult CmpHelperEQFailure(const char* lhs_expression,
 struct faketype {};
 inline bool operator==(faketype, faketype) { return true; }
 inline bool operator!=(faketype, faketype) { return false; }
-
+std::ofstream storeAssertions();
+std::string escapeXmlString(const std::string& input);
+std::string escapeXmlString(const char* input);
+std::string escapeXmlString(const wchar_t* input);
 // The helper function for {ASSERT|EXPECT}_EQ.
+// Funzione template per ottenere la rappresentazione del tipo
+template <typename T>
+std::string getValueAsString(const T& value) {
+    if constexpr (std::is_enum<T>::value) {
+        // Implementa la tua logica specifica per le enum
+        return escapeXmlString(std::to_string(static_cast<std::underlying_type_t<T>>(value)));
+    } else if constexpr (std::is_same<T, const char*>::value) {
+        // Se T è const char*, effettua l'escape della stringa XML
+        return escapeXmlString(value);
+    } else if constexpr (std::is_same<T, const wchar_t*>::value) {
+        // Se T è const wchar_t*, effettua l'escape della stringa XML
+        return escapeXmlString(value);
+    } else if constexpr (std::is_arithmetic<T>::value) {
+        // Se T è un tipo numerico, utilizza std::to_string direttamente
+        return std::to_string(value);
+    } else {
+        // Implementa la tua logica generica per gli altri tipi
+        return escapeXmlString(std::to_string(value));
+    }
+}
+// Specialization for std::bitset
+template <std::size_t N>
+std::string getValueAsString(const std::bitset<N>& value) {
+    return value.to_string();
+}
+
+// Funzione template per ASSERT_EQ con SFINAE
 template <typename T1, typename T2>
 AssertionResult CmpHelperEQ(const char* lhs_expression,
                             const char* rhs_expression, const T1& lhs,
                             const T2& rhs) {
-  if (lhs == rhs) {
-    return AssertionSuccess();
-  }
-
-  return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
+    if (lhs == rhs) {
+        std::ofstream xmlStream = storeAssertions();
+        xmlStream << "       <success_expect expr=\"" <<  getValueAsString(lhs_expression) << "\" expr2=\"" <<  getValueAsString(rhs_expression)
+                  << "\" value1=\"" << getValueAsString(lhs)
+                  << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
+        xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+        xmlStream.close();
+        return AssertionSuccess();
+    }
+    std::ofstream xmlStream = storeAssertions();
+        xmlStream << "       <failure_expect expr=\"" <<  getValueAsString(lhs_expression) << "\" expr2=\"" <<  getValueAsString(rhs_expression)
+                  << "\" value1=\"" << getValueAsString(lhs)
+                  << "\" value2=\"" << getValueAsString(rhs) << "\" op=\"" << "EQ" << "\" />\n";
+        xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+        xmlStream.close();
+    return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
 }
 
 class EqHelper {
@@ -1439,16 +1486,30 @@ AssertionResult CmpHelperOpFailure(const char* expr1, const char* expr2,
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
-#define GTEST_IMPL_CMP_HELPER_(op_name, op)                                \
-  template <typename T1, typename T2>                                      \
-  AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2, \
-                                     const T1& val1, const T2& val2) {     \
-    if (val1 op val2) {                                                    \
-      return AssertionSuccess();                                           \
-    } else {                                                               \
-      return CmpHelperOpFailure(expr1, expr2, val1, val2, #op);            \
-    }                                                                      \
+#define GTEST_IMPL_CMP_HELPER_(op_name, op)                                    \
+  template <typename T1, typename T2>                                          \
+  AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2,     \
+                                     const T1& val1, const T2& val2) {         \
+    if (val1 op val2) {                                                        \
+      std::ofstream xmlStream = ::testing::internal::storeAssertions(); \
+      xmlStream << "       <success_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2) \
+                << "\" value1=\"" << getValueAsString(val1)                                      \
+                << "\" value2=\"" << getValueAsString(val2) << "\" op=\"" << #op_name << "\" />\n";  \
+        xmlStream << "</testsuites>\n";                                          \
+      xmlStream.close();                                                       \
+      return AssertionSuccess();                                               \
+    } else {                                                                   \
+     std::ofstream xmlStream = ::testing::internal::storeAssertions(); \
+      xmlStream << "       <failure_expect expr=\"" << getValueAsString(expr1) << "\" expr2=\"" << getValueAsString(expr2) \
+                << "\" value1=\"" << getValueAsString(val1)                                      \
+                << "\" value2=\"" << getValueAsString(val2) << "\" op=\"" << #op_name << "\" />\n";  \
+        xmlStream << "</testsuites>\n";                                          \
+      xmlStream.close();                                                       \
+      return CmpHelperOpFailure(expr1, expr2, val1, val2, #op);                \
+    }                                                                          \
   }
+
+
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
@@ -1554,7 +1615,7 @@ GTEST_API_ AssertionResult IsNotSubstring(const char* needle_expr,
 #endif  // GTEST_HAS_STD_WSTRING
 
 namespace internal {
-
+    std::ofstream storeAssertions();
 // Helper template function for comparing floating-points.
 //
 // Template parameter:
@@ -1569,6 +1630,12 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   const FloatingPoint<RawType> lhs(lhs_value), rhs(rhs_value);
 
   if (lhs.AlmostEquals(rhs)) {
+      std::ofstream xmlStream = ::testing::internal::storeAssertions();
+      xmlStream << "       <success_expect expr=\"" <<  getValueAsString(lhs_expression) << "\" expr2=\"" <<  getValueAsString(rhs_expression)
+                << "\" value1=\"" <<  lhs_value
+                << "\" value2=\"" <<  rhs_value << "\" op=\"" << "EQ" << "\" />\n";
+      xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+      xmlStream.close();
     return AssertionSuccess();
   }
 
@@ -1579,7 +1646,12 @@ AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
   ::std::stringstream rhs_ss;
   rhs_ss.precision(std::numeric_limits<RawType>::digits10 + 2);
   rhs_ss << rhs_value;
-
+   std::ofstream xmlStream = ::testing::internal::storeAssertions();
+      xmlStream << "       <failure_expect expr=\"" <<  getValueAsString(lhs_expression) << "\" expr2=\"" <<  getValueAsString(rhs_expression)
+                << "\" value1=\"" <<  lhs_value
+                << "\" value2=\"" <<  rhs_value << "\" op=\"" << "EQ" << "\" />\n";
+      xmlStream << "</testsuites>\n";  // Chiudi il tag </testsuites>
+      xmlStream.close();
   return EqFailure(lhs_expression, rhs_expression,
                    StringStreamToString(&lhs_ss), StringStreamToString(&rhs_ss),
                    false);
